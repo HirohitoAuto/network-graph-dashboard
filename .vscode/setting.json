@@ -1,0 +1,7 @@
+{
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingTypeStubs": "none"
+    },
+    "pylance.analysis.extraPaths": [],
+    "pylance.pythonPath": "${workspaceFolder}/.venv/bin/python"
+}
