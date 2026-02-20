@@ -1,0 +1,11 @@
+source,target,relation,weight
+Alice,Bob,友人,3
+Alice,Carol,同僚,2
+Alice,Grace,同僚,2
+Bob,Dave,家族,5
+Bob,Eve,友人,2
+Carol,Dave,友人,3
+Carol,Frank,同僚,2
+Dave,Eve,同僚,3
+Eve,Frank,友人,2
+Frank,Grace,家族,4
