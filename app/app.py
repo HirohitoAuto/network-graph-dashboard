@@ -7,12 +7,6 @@ from pyvis.network import Network
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "relationships.csv")
 
-RELATION_COLORS = {
-    "友人": "#4A90D9",
-    "同僚": "#7ED321",
-    "家族": "#E85D5D",
-}
-
 
 def build_network(df: pd.DataFrame) -> Network:
     net = Network(height="600px", width="100%", bgcolor="#1a1a2e", font_color="white")
@@ -23,14 +17,7 @@ def build_network(df: pd.DataFrame) -> Network:
         net.add_node(node, label=node, title=node)
 
     for _, row in df.iterrows():
-        color = RELATION_COLORS.get(row["relation"], "#aaaaaa")
-        net.add_edge(
-            row["source"],
-            row["target"],
-            title=row["relation"],
-            value=int(row["weight"]),
-            color=color,
-        )
+        net.add_edge(row["source"], row["target"])
 
     return net
 
@@ -41,21 +28,14 @@ def main() -> None:
 
     df = pd.read_csv(DATA_PATH)
 
-    with st.sidebar:
-        st.header("フィルター")
-        all_relations = sorted(df["relation"].unique().tolist())
-        selected = st.multiselect("関係性", all_relations, default=all_relations)
-
-    filtered = df[df["relation"].isin(selected)]
-
-    if filtered.empty:
-        st.warning("表示するデータがありません。フィルターを確認してください。")
+    if df.empty:
+        st.warning("表示するデータがありません。")
         return
 
     st.subheader("関係データ")
-    st.dataframe(filtered, use_container_width=True)
+    st.dataframe(df, use_container_width=True)
 
-    net = build_network(filtered)
+    net = build_network(df)
 
     tmp_path = None
     try:
@@ -70,15 +50,6 @@ def main() -> None:
 
     st.subheader("ネットワークグラフ")
     st.components.v1.html(html, height=620, scrolling=False)
-
-    legend = "　".join(
-        f'<span style="color:{color}">●</span> {rel}'
-        for rel, color in RELATION_COLORS.items()
-    )
-    st.markdown(
-        f"**凡例:** {legend}　　エッジの太さは関係の強さを示します",
-        unsafe_allow_html=True,
-    )
 
 
 if __name__ == "__main__":
