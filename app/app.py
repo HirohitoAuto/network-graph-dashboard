@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 
@@ -81,6 +82,11 @@ def build_network(df: pd.DataFrame) -> Network:
 
     for _, row in df.iterrows():
         net.add_edge(row["source"], row["target"])
+
+    # ノードラベル（人物名）を明示的に表示するためフォントサイズを設定
+    opts = json.loads(net.options.to_json())
+    opts.setdefault("nodes", {}).setdefault("font", {}).update({"size": 16, "color": "white"})
+    net.set_options(json.dumps(opts))
 
     return net
 
