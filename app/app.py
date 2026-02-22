@@ -109,7 +109,7 @@ def main() -> None:
 
     # サイドバーにタグフィルターを追加
     all_tags = sorted(prop_df["tag"].dropna().unique().tolist())
-    selected_tags = st.sidebar.multiselect("タグでフィルター", options=all_tags)
+    selected_tags = st.sidebar.multiselect("専門分野", options=all_tags)
 
     # 選択されたタグに基づいてノードを絞り込む
     if selected_tags:
@@ -136,7 +136,7 @@ def main() -> None:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
-    st.subheader("ネットワークグラフ")
+    st.subheader("相関関係")
     st.components.v1.html(html, height=620, scrolling=False)
 
 
