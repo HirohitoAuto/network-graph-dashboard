@@ -7,6 +7,7 @@ import streamlit as st
 from pyvis.network import Network
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "relationships.csv")
+PROPERTY_PATH = os.path.join(os.path.dirname(__file__), "data", "property.csv")
 
 
 HIGHLIGHT_COLOR = "#ff6b35"
@@ -100,9 +101,23 @@ def main() -> None:
     st.title("人物ネットワークグラフ")
 
     df = pd.read_csv(DATA_PATH)
+    prop_df = pd.read_csv(PROPERTY_PATH)
 
     if df.empty:
         st.warning("表示するデータがありません。")
+        return
+
+    # サイドバーにタグフィルターを追加
+    all_tags = sorted(prop_df["tag"].dropna().unique().tolist())
+    selected_tags = st.sidebar.multiselect("タグでフィルター", options=all_tags)
+
+    # 選択されたタグに基づいてノードを絞り込む
+    if selected_tags:
+        filtered_names = prop_df[prop_df["tag"].isin(selected_tags)]["name"].unique()
+        df = df[df["source"].isin(filtered_names) & df["target"].isin(filtered_names)]
+
+    if df.empty:
+        st.warning("選択したフィルターに一致するデータがありません。")
         return
 
     st.subheader("関係データ")
