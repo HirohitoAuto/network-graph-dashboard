@@ -12,46 +12,46 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "relationships.csv")
 HIGHLIGHT_COLOR = "#ff6b35"
 
 _CLICK_HANDLER_JS_TEMPLATE = """
-                  // クリックアクション: ノード選択時のハイライトと絞り込み表示
-                  var selectedNode = null;
-                  network.on("click", function(params) {{
-                      if (params.nodes.length > 0) {{
-                          selectedNode = params.nodes[0];
-                          var connectedNodeSet = new Set(network.getConnectedNodes(selectedNode));
-                          var connectedEdgeSet = new Set(network.getConnectedEdges(selectedNode));
+// クリックアクション: ノード選択時のハイライトと絞り込み表示
+var selectedNode = null;
+network.on("click", function(params) {{
+    if (params.nodes.length > 0) {{
+        selectedNode = params.nodes[0];
+        var connectedNodeSet = new Set(network.getConnectedNodes(selectedNode));
+        var connectedEdgeSet = new Set(network.getConnectedEdges(selectedNode));
 
-                          var updateNodes = [];
-                          nodes.forEach(function(node) {{
-                              if (node.id === selectedNode) {{
-                                  updateNodes.push({{id: node.id, color: {{background: "{color}", border: "{color}", highlight: {{background: "{color}", border: "{color}"}}}}, hidden: false}});
-                              }} else if (connectedNodeSet.has(node.id)) {{
-                                  updateNodes.push({{id: node.id, color: nodeColors[node.id], hidden: false}});
-                              }} else {{
-                                  updateNodes.push({{id: node.id, hidden: true}});
-                              }}
-                          }});
-                          nodes.update(updateNodes);
+        var updateNodes = [];
+        nodes.forEach(function(node) {{
+            if (node.id === selectedNode) {{
+                updateNodes.push({{id: node.id, color: {{background: "{color}", border: "{color}", highlight: {{background: "{color}", border: "{color}"}}}}, hidden: false}});
+            }} else if (connectedNodeSet.has(node.id)) {{
+                updateNodes.push({{id: node.id, color: nodeColors[node.id], hidden: false}});
+            }} else {{
+                updateNodes.push({{id: node.id, hidden: true}});
+            }}
+        }});
+        nodes.update(updateNodes);
 
-                          var updateEdges = [];
-                          edges.forEach(function(edge) {{
-                              updateEdges.push({{id: edge.id, hidden: !connectedEdgeSet.has(edge.id)}});
-                          }});
-                          edges.update(updateEdges);
-                      }} else {{
-                          selectedNode = null;
-                          var resetNodes = [];
-                          nodes.forEach(function(node) {{
-                              resetNodes.push({{id: node.id, color: nodeColors[node.id], hidden: false}});
-                          }});
-                          nodes.update(resetNodes);
+        var updateEdges = [];
+        edges.forEach(function(edge) {{
+            updateEdges.push({{id: edge.id, hidden: !connectedEdgeSet.has(edge.id)}});
+        }});
+        edges.update(updateEdges);
+    }} else {{
+        selectedNode = null;
+        var resetNodes = [];
+        nodes.forEach(function(node) {{
+            resetNodes.push({{id: node.id, color: nodeColors[node.id], hidden: false}});
+        }});
+        nodes.update(resetNodes);
 
-                          var resetEdges = [];
-                          edges.forEach(function(edge) {{
-                              resetEdges.push({{id: edge.id, hidden: false}});
-                          }});
-                          edges.update(resetEdges);
-                      }}
-                  }});
+        var resetEdges = [];
+        edges.forEach(function(edge) {{
+            resetEdges.push({{id: edge.id, hidden: false}});
+        }});
+        edges.update(resetEdges);
+    }}
+}});
 """
 
 _INJECT_MARKER = "return network;"
@@ -59,7 +59,9 @@ _INJECT_MARKER = "return network;"
 
 def inject_click_handler(html: str) -> str:
     if _INJECT_MARKER not in html:
-        raise ValueError(f"Injection marker '{_INJECT_MARKER}' not found in generated HTML.")
+        raise ValueError(
+            f"Injection marker '{_INJECT_MARKER}' not found in generated HTML."
+        )
     js = _CLICK_HANDLER_JS_TEMPLATE.format(color=HIGHLIGHT_COLOR)
     return html.replace(_INJECT_MARKER, js + _INJECT_MARKER, 1)
 
@@ -85,7 +87,9 @@ def build_network(df: pd.DataFrame) -> Network:
 
     # ノードラベル（人物名）を明示的に表示するためフォントサイズを設定
     opts = json.loads(net.options.to_json())
-    opts.setdefault("nodes", {}).setdefault("font", {}).update({"size": 16, "color": "white"})
+    opts.setdefault("nodes", {}).setdefault("font", {}).update(
+        {"size": 16, "color": "white"}
+    )
     net.set_options(json.dumps(opts))
 
     return net
