@@ -13,8 +13,16 @@ def build_network(df: pd.DataFrame) -> Network:
     net.barnes_hut()
 
     nodes = pd.unique(df[["source", "target"]].values.ravel())
+
+    # 各ノードの接続数を計算
+    node_degrees = {}
     for node in nodes:
-        net.add_node(node, label=node, title=node)
+        node_degrees[node] = len(df[(df["source"] == node) | (df["target"] == node)])
+
+    # ノードのサイズを接続数に応じて設定
+    for node in nodes:
+        size = 20 + node_degrees[node] * 5  # 基本サイズ + 接続数にスケール
+        net.add_node(node, label=node, title=node, size=size)
 
     for _, row in df.iterrows():
         net.add_edge(row["source"], row["target"])
