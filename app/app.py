@@ -97,11 +97,26 @@ def build_network(df: pd.DataFrame) -> Network:
     return net, pd.unique(df[["source", "target"]].values.ravel())
 
 
-def get_network_nodes_info(nodes: list, hco_df: pd.DataFrame) -> pd.DataFrame:
+def get_network_nodes_info(
+    nodes: list, hco_df: pd.DataFrame, df: pd.DataFrame
+) -> pd.DataFrame:
     """ネットワークに表示されるノードの医療従事者と医療機関情報を取得"""
     # nodes内の医療従事者に対応するhco_nameを取得
     node_info = hco_df[hco_df["hcp_name"].isin(nodes)].copy()
-    return node_info.sort_values("hcp_name")
+
+    # 各医療従事者の接続数をカウント
+    connection_counts = {}
+    for node in nodes:
+        count = len(df[(df["source"] == node) | (df["target"] == node)])
+        connection_counts[node] = count
+
+    # 接続数をカラムとして追加
+    node_info["cnt_connections"] = node_info["hcp_name"].map(connection_counts)
+
+    # cnt_connectionsで降順、次にhcp_nameで昇順にソート
+    return node_info.sort_values(
+        ["cnt_connections", "hcp_name"], ascending=[False, True]
+    )
 
 
 def main() -> None:
@@ -146,7 +161,7 @@ def main() -> None:
     st.components.v1.html(html, height=620, scrolling=False)
 
     st.subheader("医療従事者情報")
-    node_info = get_network_nodes_info(nodes, hco_df)
+    node_info = get_network_nodes_info(nodes, hco_df, df)
     if not node_info.empty:
         st.dataframe(node_info, use_container_width=True, hide_index=True)
     else:
