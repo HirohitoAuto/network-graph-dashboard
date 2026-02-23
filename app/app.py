@@ -8,6 +8,7 @@ from pyvis.network import Network
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "relationships.csv")
 PROPERTY_PATH = os.path.join(os.path.dirname(__file__), "data", "property.csv")
+HCO_PATH = os.path.join(os.path.dirname(__file__), "data", "hco.csv")
 
 
 HIGHLIGHT_COLOR = "#ff6b35"
@@ -93,15 +94,23 @@ def build_network(df: pd.DataFrame) -> Network:
     )
     net.set_options(json.dumps(opts))
 
-    return net
+    return net, pd.unique(df[["source", "target"]].values.ravel())
+
+
+def get_network_nodes_info(nodes: list, hco_df: pd.DataFrame) -> pd.DataFrame:
+    """ネットワークに表示されるノードの医療従事者と医療機関情報を取得"""
+    # nodes内の医療従事者に対応するhco_nameを取得
+    node_info = hco_df[hco_df["hcp_name"].isin(nodes)].copy()
+    return node_info.sort_values("hcp_name")
 
 
 def main() -> None:
     st.set_page_config(page_title="人物ネットワークグラフ", layout="wide")
-    st.title("人物ネットワークグラフ")
+    st.title("医療従事者の関係図ダッシュボード")
 
     df = pd.read_csv(DATA_PATH)
     prop_df = pd.read_csv(PROPERTY_PATH)
+    hco_df = pd.read_csv(HCO_PATH)
 
     if df.empty:
         st.warning("表示するデータがありません。")
@@ -120,10 +129,7 @@ def main() -> None:
         st.warning("選択したフィルターに一致するデータがありません。")
         return
 
-    st.subheader("関係データ")
-    st.dataframe(df, use_container_width=True)
-
-    net = build_network(df)
+    net, nodes = build_network(df)
 
     tmp_path = None
     try:
@@ -136,8 +142,15 @@ def main() -> None:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
-    st.subheader("相関関係")
+    st.subheader("関係図")
     st.components.v1.html(html, height=620, scrolling=False)
+
+    st.subheader("医療従事者情報")
+    node_info = get_network_nodes_info(nodes, hco_df)
+    if not node_info.empty:
+        st.dataframe(node_info, use_container_width=True, hide_index=True)
+    else:
+        st.info("ネットワークに表示されるノードの情報がありません。")
 
 
 if __name__ == "__main__":
